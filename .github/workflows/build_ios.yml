@@ -8,17 +8,25 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout repo
+      # 1️⃣ نسخ المشروع من GitHub
+      - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2️⃣ إعداد Ruby لتجنب خطأ ruby-version
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.2.2
 
+      # 3️⃣ تثبيت CocoaPods لو موجود Podfile
       - name: Install dependencies
         run: |
-          gem install cocoapods
-          pod install || true
+          if [ -f "Podfile" ]; then
+            sudo gem install cocoapods
+            pod install
+          fi
 
+      # 4️⃣ بناء المشروع وإنشاء IPA
       - name: Build IPA
         run: |
           xcodebuild -project BLETest/BLETest.xcodeproj \
@@ -29,3 +37,10 @@ jobs:
                      -archivePath $PWD/build/BLETest.xcarchive \
                      -exportOptionsPlist ExportOptions.plist \
                      -exportPath $PWD/build
+
+      # 5️⃣ رفع IPA كـ artifact
+      - name: Upload IPA
+        uses: actions/upload-artifact@v3
+        with:
+          name: BLETest-IPA
+          path: $PWD/build/*.ipa
