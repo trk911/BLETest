@@ -1,0 +1,31 @@
+name: Build iOS App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+
+      - name: Install dependencies
+        run: |
+          gem install cocoapods
+          pod install || true
+
+      - name: Build IPA
+        run: |
+          xcodebuild -project BLETest/BLETest.xcodeproj \
+                     -scheme BLETest \
+                     -configuration Release \
+                     -archivePath $PWD/build/BLETest.xcarchive archive
+          xcodebuild -exportArchive \
+                     -archivePath $PWD/build/BLETest.xcarchive \
+                     -exportOptionsPlist ExportOptions.plist \
+                     -exportPath $PWD/build
